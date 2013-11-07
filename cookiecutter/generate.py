@@ -121,20 +121,18 @@ def generate_file(project_dir, infile, context, env):
     shutil.copymode(infile, outfile)
 
 
-def render_and_create_dir(dirname, context, output_dir):
+def render_and_create_dir(dirname, context):
     """
     Renders the name of a directory, creates the directory, and returns its path.
     """
-
     name_tmpl = Template(dirname)
     rendered_dirname = name_tmpl.render(**context)
-    logging.debug('Rendered dir {0} must exist in output_dir {1}'.format(
+    logging.debug('Rendered dir {0} must exist'.format(
         rendered_dirname,
-        output_dir
     ))
-    dir_to_create = os.path.normpath(
-        os.path.join(output_dir, rendered_dirname)
-    )
+
+    dir_to_create = os.path.normpath(rendered_dirname)
+
     make_sure_path_exists(dir_to_create)
     return dir_to_create
 
@@ -150,50 +148,26 @@ def ensure_dir_is_templated(dirname):
         raise NonTemplatedInputDirException
 
 
-def generate_files(repo_dir, context=None, output_dir="."):
+def generate_files(src_dir, dest_dir, context=None):
     """
     Renders the templates and saves them to files.
 
     :param repo_dir: Project template input directory.
     :param context: Dict for populating the template's variables.
-    :param output_dir: Where to output the generated project dir into.
     """
 
-    template_dir = find_template(repo_dir)
-    logging.debug('Generating project from {0}...'.format(template_dir))
-    context = context or {}
+    logging.debug("dest_dir is {0}".format(dest_dir))
 
-    unrendered_dir = os.path.split(template_dir)[1]
-    ensure_dir_is_templated(unrendered_dir)
-    project_dir = render_and_create_dir(unrendered_dir, context, output_dir)
-
-    # We want the Jinja path and the OS paths to match. Consequently, we'll:
-    #   + CD to the template folder
-    #   + Set Jinja's path to "."
-    #
-    #  In order to build our files to the correct folder(s), we'll use an
-    # absolute path for the target folder (project_dir)
-
-    project_dir = os.path.abspath(project_dir)
-    logging.debug("project_dir is {0}".format(project_dir))
-    # run pre-gen hook from repo_dir
-    with work_in(repo_dir):
-        run_hook('pre_gen_project', project_dir, context)
-
-    with work_in(template_dir):
+    with work_in(src_dir):
         env = Environment(extensions=load_jinja_plugins())
         env.loader = FileSystemLoader(".")
 
         for root, dirs, files in os.walk("."):
             for d in dirs:
-                unrendered_dir = os.path.join(project_dir, os.path.join(root, d))
-                render_and_create_dir(unrendered_dir, context, output_dir)
+                unrendered_dir = os.path.join(dest_dir, os.path.join(root, d))
+                render_and_create_dir(unrendered_dir, context)
 
             for f in files:
                 infile = os.path.join(root, f)
                 logging.debug("f is {0}".format(f))
-                generate_file(project_dir, infile, context, env)
-
-    # run post-gen hook from repo_dir
-    with work_in(repo_dir):
-        run_hook('post_gen_project', project_dir, context)
+                generate_file(dest_dir, infile, context, env)
