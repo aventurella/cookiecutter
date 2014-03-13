@@ -85,12 +85,13 @@ def generate_file(project_dir, infile, context, env):
     """
 
     logging.debug("Generating file {0}".format(infile))
+    outfile = generate_path(project_dir, infile, context)
+    if outfile.endswith('/') or '//' in outfile:
+        return
+    write_file(outfile, infile, context, env)
 
-    # Render the path to the output file (not including the root project dir)
-    outfile_tmpl = Template(infile)
-    outfile = os.path.join(project_dir, outfile_tmpl.render(**context))
-    logging.debug("outfile is {0}".format(outfile))
 
+def write_file(outfile, infile, context, env):
     # Just copy over binary files. Don't render.
     logging.debug("Check {0} to see if it's a binary".format(infile))
     if is_binary(infile):
@@ -119,6 +120,14 @@ def generate_file(project_dir, infile, context, env):
 
     # Apply file permissions to output file
     shutil.copymode(infile, outfile)
+
+
+def generate_path(project_dir, infile, context):
+    # Render the path to the output file (not including the root project dir)
+    outfile_tmpl = Template(infile)
+    outfile = os.path.join(project_dir, outfile_tmpl.render(**context))
+    logging.debug("outfile is {0}".format(outfile))
+    return outfile
 
 
 def render_and_create_dir(dirname, context):
