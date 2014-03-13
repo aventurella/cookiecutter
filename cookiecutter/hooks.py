@@ -93,4 +93,4 @@ def run_hook(hook_name, project_dir, context=None):
     if script is None:
         logging.debug("No hooks found")
         return
-    return _run_hook(script, project_dir)
+    return _run_hook(script, project_dir, context)
