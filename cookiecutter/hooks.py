@@ -53,6 +53,8 @@ def _run_hook(script_path, cwd='.', context=None):
     script is first run through jinja template and context passed.
     If context is provided, the script will be run through the jinja templating.
     '''
+    extension = os.path.splitext(script_path)[1]
+
     if context:
         with open(script_path, 'r') as f:
             content = f.read()
@@ -68,7 +70,6 @@ def _run_hook(script_path, cwd='.', context=None):
         os.chmod(temp_script_path, st.st_mode | stat.S_IEXEC)
         script_path = temp_script_path
 
-    extension = os.path.splitext(script_path)[1]
     if '.py' in extension:
         script_path = [sys.executable, script_path]
 
