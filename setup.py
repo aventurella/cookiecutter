@@ -2,7 +2,7 @@
 
 import os
 import sys
-
+import cookiecutter
 try:
     from setuptools import setup
 except ImportError:
@@ -33,7 +33,7 @@ if sys.version < '3':
 
 setup(
     name='cookiecutter',
-    version='dev',
+    version=cookiecutter.__version__,
     description='A command-line utility that creates projects from project \
         templates, e.g. creating a Python package project from a Python \
         package project template.',
