@@ -19,9 +19,7 @@ from jinja2.exceptions import TemplateSyntaxError
 from binaryornot.check import is_binary
 
 from .exceptions import NonTemplatedInputDirException
-from .find import find_template
 from .utils import make_sure_path_exists, unicode_open, work_in
-from .hooks import run_hook
 from .plugins import load_jinja_plugins
 
 
@@ -46,7 +44,9 @@ def generate_context(context_file='cookiecutter.json', default_context=None):
     context = {}
 
     file_handle = open(context_file)
-    obj = json.load(file_handle, encoding='utf-8', object_pairs_hook=OrderedDict)
+    obj = json.load(file_handle,
+                    encoding='utf-8',
+                    object_pairs_hook=OrderedDict)
 
     # Add the Python object to the context dictionary
     file_name = os.path.split(context_file)[1]
@@ -86,7 +86,7 @@ def generate_file(project_dir, infile, context, env):
 
     logging.debug("Generating file {0}".format(infile))
     outfile = generate_path(project_dir, infile, context)
-    if outfile.endswith('/') or '//' in outfile:
+    if outfile.endswith(os.path.sep) or (os.path.sep * 2) in outfile:
         return
     write_file(outfile, infile, context, env)
 
@@ -132,7 +132,8 @@ def generate_path(project_dir, infile, context):
 
 def render_and_create_dir(dirname, context):
     """
-    Renders the name of a directory, creates the directory, and returns its path.
+    Renders the name of a directory, creates the directory,
+    and returns its path.
     """
     name_tmpl = Template(dirname)
     rendered_dirname = name_tmpl.render(**context)
@@ -150,8 +151,7 @@ def ensure_dir_is_templated(dirname):
     """
     Ensures that dirname is a templated directory name.
     """
-    if '{{' in dirname and \
-        '}}' in dirname:
+    if '{{' in dirname and '}}' in dirname:
         return True
     else:
         raise NonTemplatedInputDirException
